@@ -7,7 +7,22 @@ models:
       - name: pickup_location_id
         data_tests:
           - not_null
+          - relationships:
+              to: ref('stg_taxi_zones')
+              field: location_id
+      - name: dropoff_location_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_taxi_zones')
+              field: location_id
       - name: trip_date
+        data_tests:
+          - not_null
+      - name: fare_amount
+        data_tests:
+          - not_null
+      - name: total_amount
         data_tests:
           - not_null
       - name: pickup_zone

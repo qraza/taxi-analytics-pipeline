@@ -32,9 +32,11 @@ cleaned as (
         tpep_pickup_datetime >= '2024-01-01'
         and tpep_pickup_datetime < '2024-02-01'
         and trip_distance > 0
+        and trip_distance < 100
         and fare_amount > 0
         and total_amount > 0
         and passenger_count > 0
+        and datediff('minute', tpep_pickup_datetime, tpep_dropoff_datetime) >= 0
 )
 
 select * from cleaned
