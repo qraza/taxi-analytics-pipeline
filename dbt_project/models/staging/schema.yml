@@ -4,13 +4,50 @@ models:
   - name: stg_yellow_trips
     description: "Cleaned yellow taxi trips"
     columns:
+      - name: vendor_id
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 6]
       - name: pickup_location_id
         data_tests:
           - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_taxi_zones')
+                field: location_id
+      - name: dropoff_location_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_taxi_zones')
+                field: location_id
       - name: pickup_at
         data_tests:
           - not_null
+      - name: dropoff_at
+        data_tests:
+          - not_null
+      - name: trip_duration_minutes
+        data_tests:
+          - not_null
+      - name: passenger_count
+        data_tests:
+          - not_null
+      - name: trip_distance
+        data_tests:
+          - not_null
+      - name: payment_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4]
       - name: fare_amount
+        data_tests:
+          - not_null
+      - name: total_amount
         data_tests:
           - not_null
 
@@ -22,5 +59,22 @@ models:
           - not_null
           - unique
       - name: borough
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - "Bronx"
+                  - "Brooklyn"
+                  - "EWR"
+                  - "Manhattan"
+                  - "N/A"
+                  - "Queens"
+                  - "Staten Island"
+                  - "Unknown"
+      - name: zone_name
+        data_tests:
+          - not_null
+      - name: service_zone
         data_tests:
           - not_null
