@@ -18,8 +18,12 @@ models:
                 field: location_id
       - name: pickup_zone
         description: "Pickup zone name"
+        data_tests:
+          - not_null
       - name: pickup_borough
         description: "NYC borough"
+        data_tests:
+          - not_null
       - name: total_trips
         description: "Number of trips"
         data_tests:
@@ -28,11 +32,23 @@ models:
         description: "Average trip distance in miles"
         data_tests:
           - not_null
+      - name: avg_duration_minutes
+        description: "Average trip duration in minutes"
+        data_tests:
+          - not_null
       - name: avg_fare_usd
         description: "Average fare amount"
         data_tests:
           - not_null
+      - name: avg_tip_usd
+        description: "Average tip amount"
+        data_tests:
+          - not_null
       - name: total_revenue_usd
         description: "Total revenue"
+        data_tests:
+          - not_null
+      - name: avg_passengers
+        description: "Average passenger count"
         data_tests:
           - not_null
