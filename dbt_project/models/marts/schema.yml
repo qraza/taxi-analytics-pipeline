@@ -12,12 +12,23 @@ models:
         description: "Pickup zone ID"
         data_tests:
           - not_null
+          - relationships:
+              to: ref('stg_taxi_zones')
+              field: location_id
       - name: pickup_zone
         description: "Pickup zone name"
       - name: pickup_borough
         description: "NYC borough"
       - name: total_trips
         description: "Number of trips"
+        data_tests:
+          - not_null
+      - name: avg_distance_miles
+        description: "Average trip distance in miles"
+        data_tests:
+          - not_null
+      - name: avg_fare_usd
+        description: "Average fare amount"
         data_tests:
           - not_null
       - name: total_revenue_usd
