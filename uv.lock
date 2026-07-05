@@ -63,11 +63,12 @@ wheels = [
 [[package]]
 name = "capstone-data-tool"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "click" },
     { name = "dbt-core" },
     { name = "dbt-duckdb" },
+    { name = "duckdb" },
     { name = "httpx" },
     { name = "rich" },
 ]
@@ -83,6 +84,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.0" },
     { name = "dbt-core", specifier = ">=1.11" },
     { name = "dbt-duckdb", specifier = ">=1.10" },
+    { name = "duckdb", specifier = ">=1.0" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "rich", specifier = ">=13.0" },
 ]

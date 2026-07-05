@@ -14,8 +14,8 @@ dependencies = [
 [project.scripts]
 datatool = "cli.main:cli"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.0",
     "ruff>=0.4",
 ]
