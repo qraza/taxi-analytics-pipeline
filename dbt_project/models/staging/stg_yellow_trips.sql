@@ -39,4 +39,11 @@ cleaned as (
         and datediff('minute', tpep_pickup_datetime, tpep_dropoff_datetime) >= 0
 )
 
-select * from cleaned
+select *
+from cleaned
+where
+    -- drop implausible-speed trips (bad meter/GPS records); trips under 2
+    -- minutes are exempt since whole-minute duration truncation can inflate
+    -- their computed speed
+    trip_duration_minutes < 2
+    or (60 * trip_distance / trip_duration_minutes) <= 80

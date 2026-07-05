@@ -34,8 +34,11 @@ select
     t.tip_amount,
     t.tolls_amount,
     t.total_amount,
-    round(t.tip_amount / nullif(t.fare_amount, 0), 4)              as tip_pct,
-    round(t.trip_distance / nullif(t.trip_duration_minutes, 0), 2) as avg_speed_mph
+    round(t.tip_amount / nullif(t.fare_amount, 0), 4)                    as tip_pct,
+    round(60 * t.trip_distance / nullif(t.trip_duration_minutes, 0), 2)  as avg_speed_mph,
+
+    -- airport flag
+    (pu.zone_name ilike '%Airport%' or dof.zone_name ilike '%Airport%') as is_airport_trip
 
 from trips t
 left join zones pu on t.pickup_location_id = pu.location_id

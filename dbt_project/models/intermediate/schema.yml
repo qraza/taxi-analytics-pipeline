@@ -49,4 +49,8 @@ models:
         data_tests:
           - not_null
       - name: avg_speed_mph
-        description: "Trip distance divided by trip duration in minutes; null when trip_duration_minutes is 0"
+        description: "Average speed in miles per hour (trip distance / trip duration in minutes, x60); null when trip_duration_minutes is 0"
+      - name: is_airport_trip
+        description: "True if the pickup or dropoff zone name contains 'Airport'"
+        data_tests:
+          - not_null
