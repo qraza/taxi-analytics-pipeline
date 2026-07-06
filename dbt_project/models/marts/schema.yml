@@ -52,3 +52,73 @@ models:
         description: "Average passenger count"
         data_tests:
           - not_null
+
+  - name: mart_daily_kpis
+    description: "Daily trip KPIs aggregated across all pickup zones"
+    columns:
+      - name: trip_date
+        description: "Date of trips"
+        data_tests:
+          - not_null
+      - name: total_trips
+        description: "Number of trips"
+        data_tests:
+          - not_null
+      - name: total_revenue_usd
+        description: "Total revenue"
+        data_tests:
+          - not_null
+      - name: avg_fare_usd
+        description: "Average fare amount"
+        data_tests:
+          - not_null
+      - name: avg_duration_minutes
+        description: "Average trip duration in minutes"
+        data_tests:
+          - not_null
+      - name: avg_tip_pct
+        description: "Average tip amount as a fraction of fare amount"
+        data_tests:
+          - not_null
+      - name: airport_trip_share
+        description: "Share of trips with pickup or dropoff at an airport zone (0-1)"
+        data_tests:
+          - not_null
+
+  - name: mart_hourly_patterns
+    description: "Trip patterns aggregated by day of week and pickup hour"
+    columns:
+      - name: pickup_day_of_week
+        description: "Day of week of pickup"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - "Monday"
+                  - "Tuesday"
+                  - "Wednesday"
+                  - "Thursday"
+                  - "Friday"
+                  - "Saturday"
+                  - "Sunday"
+      - name: pickup_hour
+        description: "Hour of day of pickup (0-23)"
+        data_tests:
+          - not_null
+      - name: total_trips
+        description: "Number of trips in this day-of-week/hour bucket"
+        data_tests:
+          - not_null
+      - name: avg_trips_per_day
+        description: "Average trips per occurrence of this day-of-week/hour bucket (total_trips / distinct dates that day-of-week occurs in the data)"
+        data_tests:
+          - not_null
+      - name: avg_fare_usd
+        description: "Average fare amount"
+        data_tests:
+          - not_null
+      - name: avg_tip_pct
+        description: "Average tip amount as a fraction of fare amount"
+        data_tests:
+          - not_null
