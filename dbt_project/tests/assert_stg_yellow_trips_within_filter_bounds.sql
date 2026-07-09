@@ -12,7 +12,7 @@ where not (
     and pickup_at >= '2024-01-01'
     and pickup_at < '2024-02-01'
     and (
-        trip_duration_minutes < 2
-        or (60 * trip_distance / trip_duration_minutes) <= 80
+        (trip_duration_minutes < 2 and trip_distance <= 3)
+        or (trip_duration_minutes >= 2 and (60 * trip_distance / trip_duration_minutes) <= 80)
     )
 )

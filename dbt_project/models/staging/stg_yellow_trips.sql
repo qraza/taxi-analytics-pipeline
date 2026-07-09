@@ -43,7 +43,8 @@ select *
 from cleaned
 where
     -- drop implausible-speed trips (bad meter/GPS records); trips under 2
-    -- minutes are exempt since whole-minute duration truncation can inflate
-    -- their computed speed
-    trip_duration_minutes < 2
-    or (60 * trip_distance / trip_duration_minutes) <= 80
+    -- minutes are exempt from the speed check since whole-minute duration
+    -- truncation can inflate their computed speed, but they're still capped
+    -- at 3 miles -- even a sustained 80mph for 2 minutes covers ~2.6 miles
+    (trip_duration_minutes < 2 and trip_distance <= 3)
+    or (trip_duration_minutes >= 2 and (60 * trip_distance / trip_duration_minutes) <= 80)
