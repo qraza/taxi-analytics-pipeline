@@ -1,9 +1,9 @@
-# capstone-data-tool
+# taxi-analytics-pipeline
 
 NYC Yellow Taxi trip data, from raw parquet to a tested dbt/DuckDB warehouse to three consumption
 interfaces: a CLI, a Streamlit dashboard, and an automated PowerPoint deck.
 
-[![CI](https://github.com/qraza/capstone-data-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/qraza/capstone-data-tool/actions/workflows/ci.yml)
+[![CI](https://github.com/qraza/taxi-analytics-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/qraza/taxi-analytics-pipeline/actions/workflows/ci.yml)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -75,8 +75,8 @@ both stay visually consistent.
 ### Option A — local (uv)
 
 ```bash
-git clone https://github.com/qraza/capstone-data-tool.git
-cd capstone-data-tool
+git clone https://github.com/qraza/taxi-analytics-pipeline.git
+cd taxi-analytics-pipeline
 uv sync --group dev
 
 mkdir -p data

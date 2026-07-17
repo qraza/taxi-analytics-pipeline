@@ -103,49 +103,6 @@ wheels = [
 ]
 
 [[package]]
-name = "capstone-data-tool"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "click" },
-    { name = "dbt-core" },
-    { name = "dbt-duckdb" },
-    { name = "duckdb" },
-    { name = "httpx" },
-    { name = "kaleido" },
-    { name = "plotly" },
-    { name = "python-pptx" },
-    { name = "rich" },
-    { name = "streamlit" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.0" },
-    { name = "dbt-core", specifier = ">=1.11" },
-    { name = "dbt-duckdb", specifier = ">=1.10" },
-    { name = "duckdb", specifier = ">=1.0" },
-    { name = "httpx", specifier = ">=0.27" },
-    { name = "kaleido", specifier = "==0.2.1" },
-    { name = "plotly", specifier = ">=5.24" },
-    { name = "python-pptx", specifier = ">=1.0.2" },
-    { name = "rich", specifier = ">=13.0" },
-    { name = "streamlit", specifier = ">=1.38" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8.0" },
-    { name = "ruff", specifier = ">=0.4" },
-]
-
-[[package]]
 name = "certifi"
 version = "2026.6.17"
 source = { registry = "https://pypi.org/simple" }
@@ -1688,6 +1645,49 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/90/b8/e13c137c299b47f683fe6d4e198075f37a2c7666c9b96010070d58c2037c/streamlit-1.59.0.tar.gz", hash = "sha256:aaa9616f75421cd7cb8c9de8940b2b7edfe266a9d81e78195252d88fd2b00a75", size = 9760463, upload-time = "2026-07-06T15:28:10.943Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d4/6d/4ea54c377fb208e6a430c40a8dd6b271e5ea8f2191079875731ef88ec3c7/streamlit-1.59.0-py3-none-any.whl", hash = "sha256:d3e3c30caf0915e994b2b263418b28aa05ee5ba90f39e0a59b4c8021dd435d4c", size = 10329987, upload-time = "2026-07-06T15:28:07.753Z" },
+]
+
+[[package]]
+name = "taxi-analytics-pipeline"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "click" },
+    { name = "dbt-core" },
+    { name = "dbt-duckdb" },
+    { name = "duckdb" },
+    { name = "httpx" },
+    { name = "kaleido" },
+    { name = "plotly" },
+    { name = "python-pptx" },
+    { name = "rich" },
+    { name = "streamlit" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.0" },
+    { name = "dbt-core", specifier = ">=1.11" },
+    { name = "dbt-duckdb", specifier = ">=1.10" },
+    { name = "duckdb", specifier = ">=1.0" },
+    { name = "httpx", specifier = ">=0.27" },
+    { name = "kaleido", specifier = "==0.2.1" },
+    { name = "plotly", specifier = ">=5.24" },
+    { name = "python-pptx", specifier = ">=1.0.2" },
+    { name = "rich", specifier = ">=13.0" },
+    { name = "streamlit", specifier = ">=1.38" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.0" },
+    { name = "ruff", specifier = ">=0.4" },
 ]
 
 [[package]]
