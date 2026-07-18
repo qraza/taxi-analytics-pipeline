@@ -187,6 +187,91 @@ Everything above works with no `ANTHROPIC_API_KEY` set except `analyse`, the das
 tab and Analyse-with-AI button, and the `--ai` report flag — those fail gracefully with setup
 guidance rather than erroring.
 
+## Ingestion modes
+
+`scripts/load_raw.py --source [local|ci|azure]` (default `local`) loads the raw parquet + zone CSV
+into DuckDB's `nyc_tlc` schema. All three modes share the same `CREATE OR REPLACE TABLE` logic — only
+where the bytes come from changes:
+
+- **`local`** (default) — reads the two files from the local `data/` directory via `read_parquet` /
+  `read_csv_auto`. What the Quickstart above uses.
+- **`ci`** — reads the small fixture committed at `tests/fixtures/`, no real dataset or credentials
+  needed. What CI uses (`load_raw.py --source ci`).
+- **`azure`** — reads directly from a private Azure Blob container, no local download step. Installs
+  DuckDB's `azure` extension, authenticates with `AZURE_STORAGE_CONNECTION_STRING`, and reads
+  `azure://<container>/...` paths. Requires `AZURE_STORAGE_CONNECTION_STRING` and
+  `CAPSTONE_AZURE_CONTAINER` — copy `.env.example` to `.env` and fill them in (or export them in your
+  shell); the command exits with a clear error naming whichever is missing.
+
+```bash
+cp .env.example .env   # fill in AZURE_STORAGE_CONNECTION_STRING and CAPSTONE_AZURE_CONTAINER
+python scripts/load_raw.py --source azure
+```
+
+Local and CI modes work with no Azure account or credentials at all — `azure` is an additional mode,
+not a requirement.
+
+### Provisioning the Azure container
+
+These are the actual `az` CLI commands used to set up the private container this project reads
+from — reproduce them under your own subscription (`az login` first), swapping in your own
+resource group / storage account names and keeping the account key out of shell history:
+
+```bash
+az group create --name rg-capstone --location uksouth
+
+# Storage account names are globally unique, lowercase alphanumeric, 3-24 chars.
+az storage account create \
+  --name <your-globally-unique-name> \
+  --resource-group rg-capstone \
+  --location uksouth \
+  --sku Standard_LRS \
+  --kind StorageV2 \
+  --min-tls-version TLS1_2 \
+  --allow-blob-public-access false
+
+ACCOUNT_KEY=$(az storage account keys list \
+  --account-name <your-globally-unique-name> \
+  --resource-group rg-capstone \
+  --query "[0].value" -o tsv)
+
+az storage container create \
+  --name raw \
+  --account-name <your-globally-unique-name> \
+  --account-key "$ACCOUNT_KEY" \
+  --public-access off
+
+az storage blob upload \
+  --account-name <your-globally-unique-name> \
+  --account-key "$ACCOUNT_KEY" \
+  --container-name raw \
+  --name yellow_tripdata_2024-01.parquet \
+  --file data/yellow_tripdata_2024-01.parquet
+
+az storage blob upload \
+  --account-name <your-globally-unique-name> \
+  --account-key "$ACCOUNT_KEY" \
+  --container-name raw \
+  --name taxi_zone_lookup.csv \
+  --file data/taxi_zone_lookup.csv
+
+# Prints the connection string for .env — pipe it straight into a secrets manager
+# or your .env file rather than leaving it in scroll-back.
+az storage account show-connection-string \
+  --name <your-globally-unique-name> \
+  --resource-group rg-capstone \
+  --query connectionString -o tsv
+```
+
+If you're on a fresh Azure subscription, `az storage account create` may fail with
+`SubscriptionNotFound` the first time — that means the `Microsoft.Storage` resource provider
+isn't registered yet. Run `az provider register --namespace Microsoft.Storage` and retry once
+`az provider show --namespace Microsoft.Storage --query registrationState` reports `Registered`.
+
+On some Linux setups, DuckDB's `azure` extension fails to open blobs with a `Problem with the SSL
+CA cert` error under its default HTTP transport — `load_raw.py` already works around this by
+setting `azure_transport_option_type='curl'`, which uses the system's own TLS stack.
+
 ## Data quality & testing
 
 Tests are layered by intent. Generic dbt tests (`not_null`, `accepted_values`, `relationships`)
@@ -218,7 +303,7 @@ and the LLM helper with the API mocked out (`test_llm.py`) — no application lo
 by dbt's data checks.
 
 CI (`.github/workflows/ci.yml`) needs no cloud credentials and no full dataset: it loads
-`tests/fixtures/sample_trips.parquet` (a small committed fixture, via `load_raw.py --ci`) into a
+`tests/fixtures/sample_trips.parquet` (a small committed fixture, via `load_raw.py --source ci`) into a
 throwaway `data/ci_test.duckdb`, runs `dbt build --profiles-dir .ci` against it, then `pytest`. The
 same fixture backs the CLI and deck-builder pytest suites, so CI never touches the real ~2.96M-row
 dataset or an API key.
@@ -253,9 +338,9 @@ deck's charts are pixel-consistent.
   portfolio dataset small and predictable rather than because of a scaling limit.
 - `mart_hourly_patterns` has no month grain — it aggregates the full dataset, so a board pack for any
   month currently shows the same demand heatmap. A month column would be a small, mechanical fix.
-- There's no cloud ingestion layer. `scripts/load_raw.py` reads local parquet via
-  `read_parquet(...)`; DuckDB can read directly from `s3://` paths, so pointing it at object storage
-  instead of a local file is a straightforward, scoped extension rather than a redesign.
+- The `azure` ingestion mode (see [Ingestion modes](#ingestion-modes)) reads a fixed pair of blob
+  names from a single container — no manifest or multi-file glob yet, so a differently-organized
+  container needs a small code change, not just new env vars.
 
 ## Project structure
 
@@ -275,7 +360,7 @@ reporting/
   figures.py            shared plotly figure builders
   deck_builder.py       build_deck() — standalone PowerPoint generator
 scripts/
-  load_raw.py          loads parquet + zone CSV into DuckDB
+  load_raw.py          loads parquet + zone CSV into DuckDB (--source local|ci|azure)
 tests/                 pytest suite + CI fixtures
 .github/workflows/     CI: lint, dbt build, pytest
 .ci/profiles.yml       committed dbt profile (path from DBT_DB_PATH), used by CI and locally

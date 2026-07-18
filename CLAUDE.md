@@ -23,8 +23,9 @@ description, architecture, and quickstart — this file is process notes, not a 
 - [ ] MotherDuck (or other hosted DuckDB) deployment for the dashboard, so it's not local-only
 - [ ] Give `mart_hourly_patterns` a month grain (currently aggregates the full dataset regardless
       of the month a board pack is generated for)
-- [ ] Cloud ingestion layer — `scripts/load_raw.py` is source-pluggable; pointing DuckDB's
-      `read_parquet` at an `s3://` path is the natural next step
+- [x] Cloud ingestion layer — `scripts/load_raw.py --source azure` reads the raw parquet + zone CSV
+      directly from a private Azure Blob container via DuckDB's `azure` extension, no local
+      download step
 - [ ] Refactor hardcoded `~/development/capstone-data-tool` absolute paths (`cli/main.py`,
       `app/dashboard.py`, `scripts/load_raw.py`, dbt profile) to derive from the project root —
       improves portability for anyone cloning to a different location, and unblocks renaming the
