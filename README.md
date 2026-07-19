@@ -263,6 +263,10 @@ az storage account show-connection-string \
   --query connectionString -o tsv
 ```
 
+**Cleanup**: `az group delete --name rg-capstone --yes` removes the resource group and everything
+in it (storage account, container, both blobs) in one shot — there's nothing else to tear down
+separately. This disables `--source azure` until you provision again.
+
 If you're on a fresh Azure subscription, `az storage account create` may fail with
 `SubscriptionNotFound` the first time — that means the `Microsoft.Storage` resource provider
 isn't registered yet. Run `az provider register --namespace Microsoft.Storage` and retry once
