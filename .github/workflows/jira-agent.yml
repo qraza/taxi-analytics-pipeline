@@ -10,12 +10,6 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: write
-  pull-requests: write
-  issues: write
-  id-token: write
-
 env:
   DBT_DB_PATH: ${{ github.workspace }}/data/capstone.duckdb
   ISSUE_KEY: ${{ github.event.client_payload.issue_key || inputs.issue_key }}
@@ -23,6 +17,12 @@ env:
 jobs:
   jira-agent:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
+      id-token: write
 
     steps:
       - name: Checkout code
