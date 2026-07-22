@@ -86,8 +86,12 @@ models:
           - not_null
 
   - name: mart_hourly_patterns
-    description: "Trip patterns aggregated by day of week and pickup hour"
+    description: "Trip patterns aggregated by month, day of week, and pickup hour"
     columns:
+      - name: pickup_month
+        description: "Month of pickup, YYYY-MM"
+        data_tests:
+          - not_null
       - name: pickup_day_of_week
         description: "Day of week of pickup"
         data_tests:
@@ -107,11 +111,11 @@ models:
         data_tests:
           - not_null
       - name: total_trips
-        description: "Number of trips in this day-of-week/hour bucket"
+        description: "Number of trips in this month/day-of-week/hour bucket"
         data_tests:
           - not_null
       - name: avg_trips_per_day
-        description: "Average trips per occurrence of this day-of-week/hour bucket (total_trips / distinct dates that day-of-week occurs in the data)"
+        description: "Average trips per occurrence of this month/day-of-week/hour bucket (total_trips / distinct dates that day-of-week occurs in that month)"
         data_tests:
           - not_null
       - name: avg_fare_usd

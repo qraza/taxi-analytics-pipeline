@@ -150,10 +150,21 @@ def load_borough_revenue() -> pd.DataFrame:
 
 
 @st.cache_data
-def load_hourly_patterns() -> pd.DataFrame:
+def load_hourly_months() -> list[str]:
+    conn = get_conn()
+    rows = conn.execute(
+        "SELECT DISTINCT pickup_month FROM main.mart_hourly_patterns ORDER BY 1"
+    ).fetchall()
+    conn.close()
+    return [r[0] for r in rows]
+
+
+@st.cache_data
+def load_hourly_patterns(month: str) -> pd.DataFrame:
     conn = get_conn()
     df = conn.execute(
-        "SELECT * FROM main.mart_hourly_patterns"
+        "SELECT * FROM main.mart_hourly_patterns WHERE pickup_month = ?",
+        [month],
     ).df()
     conn.close()
     return df
@@ -300,7 +311,9 @@ def render_executive_overview():
 
 
 def render_operational_insights():
-    hourly = load_hourly_patterns()
+    months = load_hourly_months()
+    selected_month = st.selectbox("Month", options=months, index=len(months) - 1)
+    hourly = load_hourly_patterns(selected_month)
 
     st.subheader("Trip volume by day of week and hour")
     st.plotly_chart(build_hourly_heatmap_fig(hourly), width="stretch")

@@ -1,16 +1,21 @@
 with trips as (
-    select * from {{ ref('int_trips_enriched') }}
+    select
+        *,
+        strftime(trip_date, '%Y-%m') as pickup_month
+    from {{ ref('int_trips_enriched') }}
 ),
 
 day_occurrences as (
     select
+        pickup_month,
         pickup_day_of_week,
         count(distinct trip_date) as n_dates
     from trips
-    group by 1
+    group by 1, 2
 )
 
 select
+    t.pickup_month,
     t.pickup_day_of_week,
     t.pickup_hour,
     count(*)                                          as total_trips,
@@ -18,9 +23,12 @@ select
     round(avg(t.fare_amount), 2)                       as avg_fare_usd,
     round(avg(t.tip_pct), 4)                           as avg_tip_pct
 from trips t
-inner join day_occurrences d on t.pickup_day_of_week = d.pickup_day_of_week
-group by 1, 2, d.n_dates
+inner join day_occurrences d
+    on t.pickup_month = d.pickup_month
+    and t.pickup_day_of_week = d.pickup_day_of_week
+group by 1, 2, 3, d.n_dates
 order by
+    t.pickup_month,
     case t.pickup_day_of_week
         when 'Monday' then 1
         when 'Tuesday' then 2

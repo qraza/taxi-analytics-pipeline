@@ -86,8 +86,10 @@ def _load_month_data(conn: duckdb.DuckDBPyConnection, month: str):
         [month],
     ).df()
 
-    # mart_hourly_patterns has no month grain — it aggregates the full dataset.
-    hourly = conn.execute("SELECT * FROM main.mart_hourly_patterns").df()
+    hourly = conn.execute(
+        "SELECT * FROM main.mart_hourly_patterns WHERE pickup_month = ?",
+        [month],
+    ).df()
 
     return kpis, daily, top_zones, hourly
 
