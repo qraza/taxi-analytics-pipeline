@@ -15,7 +15,7 @@ description, architecture, and quickstart — this file is process notes, not a 
 - Don't push to origin unless explicitly asked, even after commits are made and verified — work is
   reviewed locally first.
 - `scripts/jira_client.py` is workflow-only (ADF flatten/build helpers, `get_issue`,
-  `post_comment`, `find_request_to_implement`, `build_prompt`) — no CLI/dashboard/reporting code
+  `post_comment`, `find_refinement_comments`, `build_prompt`) — no CLI/dashboard/reporting code
   imports it.
 
 ## Jira-triggered agent (`.github/workflows/jira-agent.yml`)

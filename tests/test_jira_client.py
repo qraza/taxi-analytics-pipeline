@@ -3,7 +3,7 @@ import pytest
 from scripts.jira_client import (
     adf_to_text,
     build_prompt,
-    find_request_to_implement,
+    find_refinement_comments,
     get_issue,
     post_comment,
     text_to_adf,
@@ -242,12 +242,12 @@ def test_post_comment_sends_adf_body(monkeypatch):
 # --- prompt-building logic ------------------------------------------------------------
 
 
-def test_find_request_uses_description_when_no_comments():
+def test_find_refinements_empty_when_no_comments():
     issue = {"key": "PROJ-1", "summary": "s", "description": "the description", "comments": []}
-    assert find_request_to_implement(issue) == "the description"
+    assert find_refinement_comments(issue) == []
 
 
-def test_find_request_uses_comment_before_approved():
+def test_find_refinements_uses_comment_before_approved():
     issue = {
         "key": "PROJ-1",
         "summary": "s",
@@ -257,10 +257,11 @@ def test_find_request_uses_comment_before_approved():
             {"author": "Manager", "body": "Approved", "created": "t2"},
         ],
     }
-    assert find_request_to_implement(issue) == "Please add X"
+    bodies = [c["body"] for c in find_refinement_comments(issue)]
+    assert bodies == ["Please add X"]
 
 
-def test_find_request_is_case_insensitive_on_approved_marker():
+def test_find_refinements_is_case_insensitive_on_approved_marker():
     issue = {
         "key": "PROJ-1",
         "summary": "s",
@@ -270,10 +271,11 @@ def test_find_request_is_case_insensitive_on_approved_marker():
             {"author": "Manager", "body": "  approved  ", "created": "t2"},
         ],
     }
-    assert find_request_to_implement(issue) == "Please add X"
+    bodies = [c["body"] for c in find_refinement_comments(issue)]
+    assert bodies == ["Please add X"]
 
 
-def test_find_request_uses_last_approved_when_multiple_present():
+def test_find_refinements_are_cumulative_when_multiple_approved_present():
     issue = {
         "key": "PROJ-1",
         "summary": "s",
@@ -285,20 +287,21 @@ def test_find_request_uses_last_approved_when_multiple_present():
             {"author": "Manager", "body": "Approved", "created": "t4"},
         ],
     }
-    assert find_request_to_implement(issue) == "Please add Y instead"
+    bodies = [c["body"] for c in find_refinement_comments(issue)]
+    assert bodies == ["Please add X", "Please add Y instead"]
 
 
-def test_find_request_falls_back_to_description_when_approved_is_first_comment():
+def test_find_refinements_empty_when_approved_is_first_comment():
     issue = {
         "key": "PROJ-1",
         "summary": "s",
         "description": "the description",
         "comments": [{"author": "Manager", "body": "Approved", "created": "t1"}],
     }
-    assert find_request_to_implement(issue) == "the description"
+    assert find_refinement_comments(issue) == []
 
 
-def test_find_request_falls_back_to_last_comment_when_no_approved_present():
+def test_find_refinements_uses_all_comments_when_no_approved_present():
     issue = {
         "key": "PROJ-1",
         "summary": "s",
@@ -308,10 +311,11 @@ def test_find_request_falls_back_to_last_comment_when_no_approved_present():
             {"author": "Bob", "body": "Actually add Y", "created": "t2"},
         ],
     }
-    assert find_request_to_implement(issue) == "Actually add Y"
+    bodies = [c["body"] for c in find_refinement_comments(issue)]
+    assert bodies == ["Please add X", "Actually add Y"]
 
 
-def test_build_prompt_includes_key_summary_and_request():
+def test_build_prompt_includes_key_summary_description_and_refinements():
     issue = {
         "key": "PROJ-42",
         "summary": "Add a widget",
@@ -325,16 +329,18 @@ def test_build_prompt_includes_key_summary_and_request():
 
     assert "PROJ-42" in prompt
     assert "Add a widget" in prompt
+    assert "We need a widget" in prompt
     assert "jira/PROJ-42" in prompt
-    assert "Add a blue widget" in prompt
+    assert "- Add a blue widget" in prompt
     assert "[t1] Alice: Add a blue widget" in prompt
     assert "ruff check cli/ scripts/ reporting/" in prompt
     assert "dbt build" in prompt
 
 
-def test_build_prompt_with_no_comments_uses_description():
+def test_build_prompt_with_no_comments_uses_description_with_no_refinements():
     issue = {"key": "PROJ-7", "summary": "s", "description": "the description", "comments": []}
     prompt = build_prompt(issue)
 
     assert "the description" in prompt
     assert "(no comments)" in prompt
+    assert "implement the ticket description as-is" in prompt

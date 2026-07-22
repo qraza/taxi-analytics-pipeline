@@ -114,27 +114,32 @@ def post_comment(issue_key: str, body: str) -> dict:
     return response.json()
 
 
-def find_request_to_implement(issue: dict) -> str:
-    """The comment immediately preceding the 'Approved' comment, or the description.
+def find_refinement_comments(issue: dict) -> list[dict]:
+    """Stakeholder comments to layer on top of the description, oldest first.
 
-    Falls back to the most recent comment if there are comments but none reads
-    exactly "Approved" (the workflow is only meant to fire after that comment
-    exists, but a manual workflow_dispatch test run may not have one).
+    This is every comment up to and including the one immediately preceding the
+    terminal "Approved" comment, with any "Approved" markers themselves filtered out.
+    Falls back to the full comment list if there are comments but none reads exactly
+    "Approved" (the workflow is only meant to fire after that comment exists, but a
+    manual workflow_dispatch test run may not have one).
     """
     comments = issue["comments"]
     if not comments:
-        return issue["description"]
+        return []
 
     for i in range(len(comments) - 1, -1, -1):
         if comments[i]["body"].strip().lower() == APPROVED_MARKER:
-            return comments[i - 1]["body"] if i > 0 else issue["description"]
+            refinements = comments[:i]
+            break
+    else:
+        refinements = comments
 
-    return comments[-1]["body"]
+    return [c for c in refinements if c["body"].strip().lower() != APPROVED_MARKER]
 
 
 def build_prompt(issue: dict) -> str:
     """Build the full instructional prompt for the Claude Code agent."""
-    request = find_request_to_implement(issue)
+    refinements = find_refinement_comments(issue)
 
     thread = (
         "\n".join(
@@ -144,22 +149,31 @@ def build_prompt(issue: dict) -> str:
         or "(no comments)"
     )
 
+    refinements_block = (
+        "\n".join(f"- {c['body']}" for c in refinements)
+        if refinements
+        else "(none — implement the ticket description as-is)"
+    )
+
     branch = f"jira/{issue['key']}"
 
     return f"""You are implementing a change requested via Jira ticket {issue["key"]}.
 
 Ticket summary: {issue["summary"]}
 
-Ticket description:
+Ticket description (the base requirement):
 {issue["description"] or "(no description)"}
 
 Full comment thread, oldest first:
 {thread}
 
-Implement the following request (the stakeholder comment immediately preceding the
-"Approved" comment, or the ticket description if there are no comments):
+Stakeholder refinements to incorporate on top of the base requirement, oldest first
+(every comment up to and including the most recent one before "Approved"):
+{refinements_block}
 
-{request}
+Implement the ticket description above as the base requirement, then apply each of the
+refinements listed on top of it. Where a later refinement conflicts with the
+description or an earlier refinement, the most recent one wins.
 
 Instructions:
 - Follow the conventions in CLAUDE.md.
