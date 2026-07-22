@@ -14,6 +14,23 @@ description, architecture, and quickstart — this file is process notes, not a 
   environment) instead of a personal `~/.dbt/profiles.yml` — see README Quickstart.
 - Don't push to origin unless explicitly asked, even after commits are made and verified — work is
   reviewed locally first.
+- `scripts/jira_client.py` is workflow-only (ADF flatten/build helpers, `get_issue`,
+  `post_comment`, `find_request_to_implement`, `build_prompt`) — no CLI/dashboard/reporting code
+  imports it.
+
+## Jira-triggered agent (`.github/workflows/jira-agent.yml`)
+
+- Triggers: `repository_dispatch` (type `jira-approved`, issue key at
+  `client_payload.issue_key`) and `workflow_dispatch` (manual `issue_key` input, for testing
+  before the live webhook is wired up — see README).
+- Required repo secrets: `CLAUDE_CODE_OAUTH_TOKEN`, `JIRA_EMAIL`, `JIRA_API_TOKEN`,
+  `JIRA_BASE_URL`.
+- The Jira Automation rule that posts the `jira-approved` webhook on an "Approved" comment is
+  configured manually in the Jira UI, not in this repo — there's nothing here to keep in sync
+  with it beyond the `client_payload.issue_key` shape the workflow expects.
+- The agent works on a `jira/<ISSUE-KEY>` branch and is blocked (via `claude_args`
+  `--disallowedTools`) from editing `.github/workflows/**`, `.env*`, or `.ci/**`; it only opens a
+  PR if ruff, pytest, and `dbt build --profiles-dir .ci` all pass.
 
 ## Roadmap
 

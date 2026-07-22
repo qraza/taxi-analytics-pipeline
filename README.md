@@ -312,6 +312,28 @@ throwaway `data/ci_test.duckdb`, runs `dbt build --profiles-dir .ci` against it,
 same fixture backs the CLI and deck-builder pytest suites, so CI never touches the real ~2.96M-row
 dataset or an API key.
 
+## Jira-triggered agent
+
+`.github/workflows/jira-agent.yml` lets a Jira ticket trigger an autonomous Claude Code change:
+a stakeholder comments on a ticket, a human reviewer replies "Approved", and a Jira Automation
+rule (configured manually in the Jira UI — not in this repo) fires a `repository_dispatch` webhook
+with the issue key. The workflow then:
+
+1. Fetches the ticket (summary, description, full comment thread) via `scripts/jira_client.py`
+   and builds a prompt asking Claude to implement the comment immediately preceding the
+   "Approved" comment (or the description, if there are no comments yet).
+2. Runs `anthropics/claude-code-action` on a `jira/<ISSUE-KEY>` branch, restricted from touching
+   `.github/workflows/**`, `.env*`, or `.ci/**`.
+3. Requires ruff, pytest, and `dbt build --profiles-dir .ci` to pass before it opens a PR — if any
+   check fails, it stops and explains why instead of opening one.
+4. Comments back on the Jira ticket with the PR link (and a pass/fail summary), or the reason no
+   PR was opened.
+
+**The human-approval gate is the point** — the workflow never runs from an arbitrary Jira comment,
+only after someone with permission to approve posts "Approved". To test the workflow itself before
+wiring up the live Jira webhook, trigger it manually from the Actions tab: **Actions → Jira agent →
+Run workflow**, entering a real ticket key as `issue_key`.
+
 ## Design decisions
 
 **Why DuckDB, not a client-server database.** The workload is single-user OLAP over a few million

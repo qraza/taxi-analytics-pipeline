@@ -1,0 +1,117 @@
+name: Jira agent
+
+on:
+  repository_dispatch:
+    types: [jira-approved]
+  workflow_dispatch:
+    inputs:
+      issue_key:
+        description: "Jira issue key to implement (e.g. PROJ-123)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  DBT_DB_PATH: ${{ github.workspace }}/data/capstone.duckdb
+  ISSUE_KEY: ${{ github.event.client_payload.issue_key || inputs.issue_key }}
+
+jobs:
+  jira-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv pip install --system -e . --group dev
+
+      - name: Build prompt from Jira ticket
+        id: build_prompt
+        env:
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import os
+
+          from scripts.jira_client import build_prompt, get_issue
+
+          issue_key = os.environ["ISSUE_KEY"]
+          if not issue_key:
+              raise SystemExit("ISSUE_KEY is required (client_payload.issue_key or issue_key input)")
+
+          issue = get_issue(issue_key)
+          prompt = build_prompt(issue)
+
+          delimiter = "PROMPT_EOF"
+          print(f"prompt<<{delimiter}")
+          print(prompt)
+          print(delimiter)
+          PY
+
+      - name: Run Claude Code agent
+        id: claude
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ steps.build_prompt.outputs.prompt }}
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Bash(git:*),Bash(gh:*),Bash(uv:*),Bash(python:*),Bash(pytest:*),Bash(ruff:*),Bash(dbt:*),Edit,Write,Read,Glob,Grep"
+            --disallowedTools "Edit(.github/workflows/**),Write(.github/workflows/**),Edit(.env*),Write(.env*),Edit(.ci/**),Write(.ci/**)"
+
+      - name: Find resulting PR
+        id: find_pr
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_URL=$(gh pr list --head "jira/${ISSUE_KEY}" --base main --json url --jq '.[0].url // empty')
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Report result back to Jira
+        if: always()
+        env:
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          PR_URL: ${{ steps.find_pr.outputs.pr_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python - <<'PY'
+          import os
+
+          from scripts.jira_client import post_comment
+
+          issue_key = os.environ["ISSUE_KEY"]
+          pr_url = os.environ.get("PR_URL", "").strip()
+          run_url = os.environ["RUN_URL"]
+
+          if pr_url:
+              body = (
+                  f"PR opened: {pr_url}\n\n"
+                  "Checks passed: ruff, pytest, dbt build (see the PR for details)."
+              )
+          else:
+              body = (
+                  f"No pull request was opened for {issue_key}.\n\n"
+                  "The agent stopped before opening a PR — likely because a check "
+                  "(ruff, pytest, or dbt build) failed, or it needs clarification. "
+                  f"See the workflow run for the full explanation: {run_url}"
+              )
+
+          post_comment(issue_key, body)
+          PY
