@@ -6,6 +6,7 @@ select
     trip_date,
     count(*)                                                     as total_trips,
     round(sum(total_amount), 2)                                  as total_revenue_usd,
+    round(sum(tip_amount), 2)                                    as total_tip_usd,
     round(avg(fare_amount), 2)                                   as avg_fare_usd,
     round(avg(trip_duration_minutes), 1)                         as avg_duration_minutes,
     round(avg(tip_pct), 4)                                       as avg_tip_pct,
