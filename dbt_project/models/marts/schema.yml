@@ -68,6 +68,10 @@ models:
         description: "Total revenue"
         data_tests:
           - not_null
+      - name: total_tip_usd
+        description: "Total tip amount"
+        data_tests:
+          - not_null
       - name: avg_fare_usd
         description: "Average fare amount"
         data_tests:

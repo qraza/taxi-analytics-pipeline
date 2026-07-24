@@ -104,6 +104,7 @@ def load_month_kpis() -> pd.DataFrame:
         SELECT
             sum(total_trips)                                        as total_trips,
             sum(total_revenue_usd)                                  as total_revenue_usd,
+            sum(total_tip_usd)                                      as total_tip_usd,
             sum(avg_fare_usd * total_trips) / sum(total_trips)      as avg_fare_usd,
             sum(avg_duration_minutes * total_trips) / sum(total_trips) as avg_duration_minutes
         FROM main.mart_daily_kpis
@@ -313,11 +314,12 @@ def render_executive_overview():
     kpis = load_month_kpis().iloc[0]
 
     st.subheader("Month at a glance")
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Total trips", f"{kpis['total_trips']:,.0f}")
     c2.metric("Total revenue", f"${kpis['total_revenue_usd']:,.2f}")
-    c3.metric("Avg fare", f"${kpis['avg_fare_usd']:,.2f}")
-    c4.metric("Avg duration", f"{kpis['avg_duration_minutes']:.1f} min")
+    c3.metric("Total tips", f"${kpis['total_tip_usd']:,.2f}")
+    c4.metric("Avg fare", f"${kpis['avg_fare_usd']:,.2f}")
+    c5.metric("Avg duration", f"{kpis['avg_duration_minutes']:.1f} min")
 
     daily = load_daily_kpis()
     st.plotly_chart(build_daily_trend_fig(daily), width="stretch")
