@@ -335,6 +335,7 @@ def test_build_prompt_includes_key_summary_description_and_refinements():
     assert "[t1] Alice: Add a blue widget" in prompt
     assert "ruff check cli/ scripts/ reporting/" in prompt
     assert "dbt build" in prompt
+    assert "update README.md and CLAUDE.md" in prompt
 
 
 def test_build_prompt_with_no_comments_uses_description_with_no_refinements():

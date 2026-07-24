@@ -178,6 +178,9 @@ description or an earlier refinement, the most recent one wins.
 Instructions:
 - Follow the conventions in CLAUDE.md.
 - Work on a branch named {branch}, created from main.
+- If this change adds or alters a dbt model, a dashboard tab, an interface, a test count, or
+  anything else README.md describes, update README.md and CLAUDE.md in the same change — don't
+  leave the docs to drift out of sync with the code.
 - Before considering the work done, run: `ruff check cli/ scripts/ reporting/`, then
   `pytest tests/ -v --ignore=tests/fixtures`, then (loading the CI fixture first if the
   database doesn't have it yet: `python scripts/load_raw.py --source ci`)
