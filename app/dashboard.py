@@ -283,7 +283,7 @@ def render_explorer():
     st.dataframe(
         display_df,
         column_config={
-            "Trips": st.column_config.NumberColumn(format="%d"),
+            "Trips": st.column_config.NumberColumn(format="%,d"),
             "Avg Distance (mi)": st.column_config.NumberColumn(format="%.2f"),
             "Avg Duration (min)": st.column_config.NumberColumn(format="%.1f"),
             "Avg Fare": st.column_config.NumberColumn(format="$%.2f"),
